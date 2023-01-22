@@ -1,0 +1,12 @@
+{
+    "name": "dan/shortcut-lambda",
+    "require": {
+        "bref/bref": "^1.7",
+        "guzzlehttp/guzzle": "^7.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shortcut\\": "src/"
+        }
+    }
+}

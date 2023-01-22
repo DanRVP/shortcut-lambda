@@ -1,0 +1,24 @@
+service: app
+
+provider:
+    name: aws
+    region: eu-west-2
+    runtime: provided.al2
+
+plugins:
+    - ./vendor/bref/bref
+
+functions:
+    Shortcut:
+        handler: handler.php
+        description: 'Function to upload a detailed report about team progress to shortcut'
+        events:
+        - eventBridge:
+            schedule: cron(30 16 * * ? *) # Scheduled for every day at 16:30
+        layers:
+            - ${bref:layer.php-81}
+
+# Exclude files from deployment
+package:
+    patterns:
+        - '!tests/**'
