@@ -21,13 +21,14 @@ class Handler extends EventBridgeHandler
         [$total_review_time, $average_days] = $shortcut->timeInReview($iteration_id);
         $number_of_stories = $shortcut->countStories($iteration_id);
 
-        $title = '### Shortcut Stats Report';
+        $title = '# Shortcut Stats Report';
         $report = "\n\n" . $title;
         $report .= "\nTotal time in review (mins): $total_review_time\n";
         $report .= "Total number of stories: $number_of_stories\n";
         $report .= "Average time in review per story: $average_days days\n";
         $report .= $iteration->stats->num_points_done . ' points completed in ' . $iteration->name . "\n";
         $report .= $shortcut->developerScoreBoardAsString($iteration_id);
+        $report .= $shortcut->developerReviewScoreBoardAsString($iteration_id);
 
         $parts = explode($title, $description);
         $report = trim($parts[0]) . $report;

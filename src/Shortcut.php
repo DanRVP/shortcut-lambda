@@ -71,13 +71,39 @@ class Shortcut
         }
 
         $members_api = new MembersApi($this->api_key);
-        if (empty($devs = $this->filterActiveDevs($members_api->getMembers()))) {
+        if (empty($devs = $this->getFilteredDevIdsAndNames($members_api->getMembers()))) {
             return false;
         }
 
         $dev_points = [];
         foreach ($devs as $key => $value) {
             $dev_points[$value] = $this->extractDevPointsFromStories($stories, $key);
+        }
+
+        arsort($dev_points);
+        return $dev_points;
+    }
+
+    /**
+     * Generate a developer points reviewed 'scoreboard'.
+     */
+    public function getDeveloperReviewScoreboardData(?int $iteration_id = null): array|bool
+    {
+        $iteration_api = $iteration_api = new IterationApi($this->api_key);
+        $iteration_id = $iteration_id ?? $this->getCurrentIterationId();
+
+        if (!$stories = $iteration_api->getStoriesFromIteration($iteration_id)) {
+            return false;
+        }
+
+        $members_api = new MembersApi($this->api_key);
+        if (empty($devs = $this->getFilteredDevLabelsAndNames($members_api->getMembers()))) {
+            return false;
+        }
+
+        $dev_points = [];
+        foreach ($devs as $key => $value) {
+            $dev_points[$value] = $this->extractDevReviewPointsFromStories($stories, $key);
         }
 
         arsort($dev_points);
@@ -103,6 +129,28 @@ class Shortcut
         return $scoreboard;
     }
 
+    /**
+     * Get a developer review scoreboard as a string.
+     */
+    public function developerReviewScoreBoardAsString(?int $iteration_id = null): string|bool
+    {
+        $iteration_id = $iteration_id ?? $this->getCurrentIterationId();
+
+        $dev_points = $this->getDeveloperReviewScoreboardData($iteration_id);
+        $scoreboard = "\n### Total Number of points reviewed in iteration per team member\n";
+        $position = 1;
+        foreach($dev_points as $key => $value) {
+            $string = $position . '. ' . $key . ': ' . $value . " points\n";
+            $scoreboard .= $string;
+            $position ++;
+        }
+
+        return $scoreboard;
+    }
+
+    /**
+     * Remove members if they are not part of the list of devs stored in $_ENV.
+     */
     protected function filterActiveDevs(array $members): array
     {
         $active_members = [];
@@ -112,11 +160,46 @@ class Shortcut
                 && $member->role !== 'observer'
                 && in_array($member->profile->email_address, array_map('trim', explode(',', getenv('DEV_EMAILS'))))
             ) {
-                $active_members[$member->id] = $member->profile->name;
+                $active_members[] = $member;
             }
         }
 
         return $active_members;
+    }
+
+    /**
+     * Get a list of filtered devs in a associative array format of: [id => name]
+     */
+    protected function getFilteredDevIdsAndNames(array $members): array
+    {
+        $ids_and_names = [];
+        $devs = $this->filterActiveDevs($members);
+        foreach ($devs as $dev) {
+            $ids_and_names[$dev->id] = $dev->profile->name;
+        }
+
+        return $ids_and_names;
+    }
+
+    /**
+     * Get a list of filtered devs in a associative array format of: [label => name]
+     */
+    protected function getFilteredDevLabelsAndNames(array $members): array
+    {
+        $labels_and_names = [];
+        $devs = $this->filterActiveDevs($members);
+        $labels = array_map('trim', explode(',', getenv('DEV_LABELS')));
+
+        foreach ($devs as $dev) {
+            foreach ($labels as $label) {
+                $parts = explode(' ', $label);
+                if (str_contains($dev->profile->email_address, strtolower($parts[0]))) {
+                    $labels_and_names[$label] = $dev->profile->name;
+                }
+            }
+        }
+
+        return $labels_and_names;
     }
 
     /**
@@ -126,8 +209,25 @@ class Shortcut
     {
         $points = 0;
         foreach ($stories as $story) {
+
             if (in_array($dev_id, $story->owner_ids) && !is_null($story->completed_at)) {
                 $points += ($story->estimate / count($story->owner_ids));
+            }
+        }
+
+        return $points;
+    }
+
+    /**
+     * Get the total review points per dev.
+     */
+    protected function extractDevReviewPointsFromStories(iterable $stories, string $label): int
+    {
+        $points = 0;
+        foreach ($stories as $story) {
+            $labels = array_column($story->labels, 'name');
+            if (in_array($label, $labels) && !in_array('REQUEST CHANGES', $labels) && !is_null($story->completed_at)) {
+                $points += $story->estimate;
             }
         }
 
