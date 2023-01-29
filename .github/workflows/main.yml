@@ -18,7 +18,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm ci
+    - run: npm install
     - uses: shivammathur/setup-php@v2
       with:
         php-version: "8.1"
