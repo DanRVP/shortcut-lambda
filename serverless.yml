@@ -12,6 +12,11 @@ functions:
     Shortcut:
         handler: handler.php
         description: 'Function to upload a detailed report about team progress to shortcut'
+        timeout: 120
+        environment:
+            API_KEY: ${env:SHORTCUT_API_KEY}
+            DEV_EMAILS: ${env:DEV_EMAILS}
+            DEV_LABELS: ${env:DEV_LABELS}
         events:
         - eventBridge:
             schedule: cron(30 16 * * ? *) # Scheduled for every day at 16:30
