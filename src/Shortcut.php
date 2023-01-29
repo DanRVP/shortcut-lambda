@@ -116,17 +116,13 @@ class Shortcut
     public function developerScoreBoardAsString(?int $iteration_id = null): string|bool
     {
         $iteration_id = $iteration_id ?? $this->getCurrentIterationId();
-
         $dev_points = $this->getDeveloperScoreboardData($iteration_id);
-        $scoreboard = "\n### Total Number of points in iteration per team member\n";
-        $position = 1;
-        foreach($dev_points as $key => $value) {
-            $string = $position . '. ' . $key . ': ' . $value . " points\n";
-            $scoreboard .= $string;
-            $position ++;
+        if (empty($dev_points)) {
+            return false;
         }
 
-        return $scoreboard;
+        $title = '### Total Number of points in iteration per team member';
+        return $this->makeScoreboardString($title, $dev_points);
     }
 
     /**
@@ -135,17 +131,13 @@ class Shortcut
     public function developerReviewScoreBoardAsString(?int $iteration_id = null): string|bool
     {
         $iteration_id = $iteration_id ?? $this->getCurrentIterationId();
-
         $dev_points = $this->getDeveloperReviewScoreboardData($iteration_id);
-        $scoreboard = "\n### Total Number of points reviewed in iteration per team member\n";
-        $position = 1;
-        foreach($dev_points as $key => $value) {
-            $string = $position . '. ' . $key . ': ' . $value . " points\n";
-            $scoreboard .= $string;
-            $position ++;
+        if (empty($dev_points)) {
+            return false;
         }
 
-        return $scoreboard;
+        $title = '### Total Number of points reviewed in iteration per team member';
+        return $this->makeScoreboardString($title, $dev_points);
     }
 
     /**
@@ -405,9 +397,28 @@ class Shortcut
         return $first_date < $second_date ? -1 : 1;
     }
 
+    /**
+     * Upload a report string to Shortcut
+     */
     public function uploadReport(int $iteration_id, string $report)
     {
         $iteration_api = new IterationApi($this->api_key);
         return $iteration_api->updateIteration($iteration_id, ['description' => $report]);
+    }
+
+    /**
+     * Take some key value data and turn it into a scoreboard string.
+     */
+    protected function makeScoreboardString(string $title, array $data): string
+    {
+        $scoreboard = "\n$title\n";
+        $position = 1;
+        foreach($data as $key => $value) {
+            $string = $position . '. ' . $key . ': ' . $value . " points\n";
+            $scoreboard .= $string;
+            $position ++;
+        }
+
+        return $scoreboard;
     }
 }
