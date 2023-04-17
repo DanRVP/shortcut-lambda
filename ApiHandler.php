@@ -14,11 +14,9 @@ class Handler implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $shortcut = new Shortcut();
-        var_dump($request);
-
-        $iteration_id = $request['queryStringParameters']['id'] ?? $shortcut->getCurrentIterationId();
-        $shortcut->uploadReport($iteration_id, $shortcut->generateReport($iteration_id));
-        return new Response(200, [], "success");
+        $iteration_id = $request->getQueryParams()['id'] ?? $shortcut->getCurrentIterationId();
+        $shortcut->uploadReport((int) $iteration_id, $shortcut->generateReport((int) $iteration_id));
+        return new Response(200, [], "I always return 200 lol");
     }
 }
 

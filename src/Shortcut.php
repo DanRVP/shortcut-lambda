@@ -422,7 +422,7 @@ class Shortcut
         return $scoreboard;
     }
 
-    public function generateReport($iteration_id)
+    public function generateReport(int $iteration_id)
     {
         $iteration = $this->getIteration($iteration_id);
         $description = $iteration->description;
