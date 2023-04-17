@@ -421,4 +421,27 @@ class Shortcut
 
         return $scoreboard;
     }
+
+    public function generateReport($iteration_id)
+    {
+        $iteration = $this->getIteration($iteration_id);
+        $description = $iteration->description;
+
+        [$total_review_time, $average_days] = $this->timeInReview($iteration_id);
+        $number_of_stories = $this->countStories($iteration_id);
+
+        $title = '# Shortcut Stats Report';
+        $report = "\n\n" . $title;
+        $report .= "\nTotal time in review (mins): $total_review_time\n";
+        $report .= "Total number of stories: $number_of_stories\n";
+        $report .= "Average time in review per story: $average_days days\n";
+        $report .= $iteration->stats->num_points_done . ' points completed in ' . $iteration->name . "\n";
+        $report .= $this->developerScoreBoardAsString($iteration_id);
+        $report .= $this->developerReviewScoreBoardAsString($iteration_id);
+
+        $parts = explode($title, $description);
+        $report = trim($parts[0]) . $report;
+
+        return $report;
+    }
 }

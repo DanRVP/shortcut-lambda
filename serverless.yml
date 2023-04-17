@@ -1,4 +1,4 @@
-service: app
+service: shortcut
 
 provider:
     name: aws
@@ -9,8 +9,8 @@ plugins:
     - ./vendor/bref/bref
 
 functions:
-    Shortcut:
-        handler: handler.php
+    eventbridge:
+        handler: EventBridgeHandler.php
         description: 'Function to upload a detailed report about team progress to shortcut'
         timeout: 120
         environment:
@@ -18,8 +18,20 @@ functions:
             DEV_EMAILS: ${env:DEV_EMAILS}
             DEV_LABELS: ${env:DEV_LABELS}
         events:
-        - eventBridge:
-            schedule: cron(30 16 * * ? *) # Scheduled for every day at 16:30
+            - eventBridge:
+                schedule: cron(30 23 * * ? *) # Scheduled for every day at 23:30
+        layers:
+            - ${bref:layer.php-81}
+    api:
+        handler: ApiHandler.php
+        description: 'Function to upload a detailed report about team progress to shortcut'
+        timeout: 120
+        environment:
+            API_KEY: ${env:SHORTCUT_API_KEY}
+            DEV_EMAILS: ${env:DEV_EMAILS}
+            DEV_LABELS: ${env:DEV_LABELS}
+        events:
+            - httpApi: "GET /shortcut"
         layers:
             - ${bref:layer.php-81}
 
